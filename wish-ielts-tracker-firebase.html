@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wish IELTS by Jarin — Daily Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--maroon:#6B1F2A;--maroon-deep:#4A1219;--maroon-mid:#7E2434;--cream:#F5EFE0;--cream-dark:#EDE3CE;--gold:#C9A84C;--gold-light:#DDB96A;--gold-pale:#F0DFA0;--text-dark:#2A1015;--text-mid:#5A3540;--shadow:rgba(107,31,42,0.13);--purple-dark:#3B1A40}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--text-dark);min-height:100vh}
+
+/* AUTH */
+#authScreen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:var(--maroon-deep)}
+.auth-box{background:var(--cream);border-radius:18px;padding:40px 36px;width:100%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,0.4);text-align:center}
+.auth-eagle{font-size:2.8rem;margin-bottom:8px}
+.auth-logo{font-family:'Cormorant Garamond',serif;font-size:2rem;font-weight:700;color:var(--maroon);margin-bottom:4px}
+.auth-sub{font-size:.72rem;color:var(--text-mid);letter-spacing:.15em;text-transform:uppercase;margin-bottom:24px}
+.auth-tabs{display:flex;border-radius:8px;overflow:hidden;border:1.5px solid var(--cream-dark);margin-bottom:20px}
+.auth-tab{flex:1;padding:9px;background:white;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:600;color:var(--text-mid);transition:all .2s}
+.auth-tab.active{background:var(--maroon);color:var(--cream)}
+.auth-box input{width:100%;padding:11px 14px;border:1.5px solid var(--cream-dark);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.9rem;color:var(--text-dark);background:white;outline:none;margin-bottom:10px;transition:border-color .2s}
+.auth-box input:focus{border-color:var(--maroon)}
+.btn-auth{width:100%;padding:12px;border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.92rem;font-weight:600;cursor:pointer;background:var(--maroon);color:var(--cream);transition:background .2s;margin-top:4px}
+.btn-auth:hover{background:var(--maroon-mid)}
+.auth-error{color:#c0392b;font-size:.78rem;margin-top:10px;min-height:18px;line-height:1.4}
+.auth-loading{color:var(--text-mid);font-size:.8rem;margin-top:10px}
+
+/* APP */
+#appScreen{display:none}
+
+/* HEADER */
+header{background:var(--maroon-deep);position:sticky;top:0;z-index:100;box-shadow:0 4px 24px rgba(0,0,0,.35)}
+.header-inner{max-width:1100px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px}
+.brand-main{font-family:'Cormorant Garamond',serif;font-size:1.55rem;font-weight:700;color:var(--gold-light)}
+.brand-sub{font-size:.64rem;color:rgba(245,239,224,.5);letter-spacing:.16em;text-transform:uppercase;display:block;margin-top:1px}
+.eagle{font-size:1.8rem;filter:drop-shadow(0 0 8px rgba(201,168,76,.5))}
+.header-user{font-size:.82rem;color:rgba(245,239,224,.7);margin-left:4px}
+.header-user strong{color:var(--gold-light)}
+.header-stats{margin-left:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.stat-chip{background:rgba(255,255,255,.07);border:1px solid rgba(201,168,76,.25);border-radius:20px;padding:5px 13px;font-size:.78rem;color:var(--gold-pale);font-weight:500}
+.stat-chip strong{color:var(--gold)}
+.progress-bar-wrap{width:90px;height:5px;background:rgba(255,255,255,.1);border-radius:10px;overflow:hidden}
+.progress-bar-fill{height:100%;background:var(--gold);border-radius:10px;transition:width .4s ease;width:0%}
+.btn-logout{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);color:var(--cream);padding:6px 12px;border-radius:6px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.76rem;transition:background .2s}
+.btn-logout:hover{background:rgba(255,255,255,.14)}
+
+/* TABS */
+.tabs-bar{background:var(--maroon);border-bottom:2px solid var(--gold)}
+.tabs-inner{max-width:1100px;margin:0 auto;padding:0 24px;display:flex}
+.tab-btn{background:none;border:none;padding:13px 22px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.85rem;font-weight:500;color:rgba(245,239,224,.6);border-bottom:3px solid transparent;transition:all .2s;white-space:nowrap}
+.tab-btn:hover{color:var(--cream)}
+.tab-btn.active{color:var(--gold);border-bottom-color:var(--gold)}
+
+/* MAIN */
+main{max-width:1100px;margin:0 auto;padding:28px 24px 60px}
+.tab-pane{display:none}
+#pane-tracker{display:block}
+
+/* CONTROLS */
+.controls-bar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;align-items:center}
+.controls-bar input[type="text"]{flex:1;min-width:160px;padding:9px 14px;border:1.5px solid var(--cream-dark);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.88rem;color:var(--text-dark);background:white;outline:none;transition:border-color .2s}
+.controls-bar input[type="text"]:focus{border-color:var(--maroon)}
+.controls-bar select{padding:9px 14px;border:1.5px solid var(--cream-dark);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.88rem;color:var(--text-dark);background:white;outline:none;cursor:pointer}
+.btn-expand-all{padding:9px 16px;border:1.5px solid var(--maroon);background:white;color:var(--maroon);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap}
+.btn-expand-all:hover{background:var(--maroon);color:var(--cream)}
+
+/* DAY ROWS */
+.day-row{background:white;border-radius:12px;border:1.5px solid var(--cream-dark);margin-bottom:10px;overflow:hidden;box-shadow:0 2px 10px var(--shadow);transition:box-shadow .2s;animation:fadeUp .3s ease both}
+.day-row:hover{box-shadow:0 4px 20px rgba(107,31,42,.16)}
+.day-all-done{border-color:#a5d6a7;background:#f9fff9}
+.day-label{display:flex;align-items:center;justify-content:space-between;padding:13px 18px;cursor:pointer;gap:10px;user-select:none}
+.day-label-left{display:flex;align-items:center;gap:12px;flex-wrap:wrap;flex:1;min-width:0}
+.day-badge{font-family:'Cormorant Garamond',serif;font-size:.95rem;font-weight:700;background:var(--cream-dark);color:var(--maroon);padding:3px 12px;border-radius:20px;white-space:nowrap;min-width:66px;text-align:center;flex-shrink:0}
+.badge-done{background:#c8e6c9;color:#2e7d32}
+.badge-partial{background:#fff3e0;color:#e65100}
+.day-mod-pills{display:flex;gap:5px;flex-wrap:wrap}
+.mod-pill{font-size:.67rem;font-weight:600;padding:2px 8px;border-radius:20px;letter-spacing:.04em;text-transform:uppercase;flex-shrink:0}
+.mod-pill.mod-p1{background:#fce4ec;color:#880e4f}
+.mod-pill.mod-cue{background:#ede7f6;color:#4a148c}
+.mod-pill.mod-wt{background:#e8eaf6;color:#1a237e}
+.day-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.day-progress-text{font-size:.78rem;color:var(--text-mid);font-weight:600}
+.day-chevron{color:var(--gold);font-size:.9rem}
+
+/* MODULE CARDS */
+.day-modules{padding:0 12px 12px;display:flex;flex-direction:column;gap:8px}
+@media(min-width:700px){.day-modules{flex-direction:row;flex-wrap:wrap}.day-modules .module-card{flex:1;min-width:240px}}
+.module-card{border-radius:10px;border:1.5px solid var(--cream-dark);overflow:hidden;transition:opacity .2s,box-shadow .2s}
+.module-card:hover{box-shadow:0 3px 12px var(--shadow)}
+.module-card.mod-done{opacity:.68}
+.mod-header{display:flex;align-items:center;justify-content:space-between;padding:10px 13px;gap:8px}
+.mod-header.mod-p1{background:var(--maroon)}
+.mod-header.mod-cue{background:var(--maroon-deep)}
+.mod-header.mod-wt{background:var(--purple-dark)}
+.mod-header-left{display:flex;align-items:center;gap:8px;flex:1;min-width:0}
+.mod-icon{font-size:1rem;flex-shrink:0}
+.mod-type-label{font-family:'Cormorant Garamond',serif;font-size:.88rem;font-weight:600;color:var(--gold-light);letter-spacing:.04em;line-height:1.2}
+.mod-type-sub{font-size:.63rem;color:rgba(245,239,224,.5);letter-spacing:.08em;text-transform:uppercase;display:block;margin-top:1px}
+.check-btn{width:26px;height:26px;border-radius:50%;border:2px solid rgba(201,168,76,.45);background:transparent;cursor:pointer;font-size:.8rem;color:transparent;display:flex;align-items:center;justify-content:center;transition:all .18s;flex-shrink:0}
+.check-btn:hover{border-color:var(--gold);background:rgba(201,168,76,.12)}
+.check-btn.checked{background:var(--gold);border-color:var(--gold);color:var(--maroon-deep)}
+.check-btn:active{transform:scale(.88)}
+.mod-body{padding:11px 13px 13px;background:white}
+.mod-topic{font-family:'Cormorant Garamond',serif;font-size:1.05rem;font-weight:600;color:var(--maroon);line-height:1.4;margin-bottom:8px}
+.topic-done{text-decoration:line-through;color:var(--text-mid)}
+.mod-hints{border-top:1px solid var(--cream-dark);padding-top:8px}
+.hints-label{font-size:.65rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin-bottom:5px}
+.mod-hints ul{list-style:none;display:flex;flex-direction:column;gap:3px}
+.mod-hints ul li{font-size:.77rem;color:var(--text-mid);padding-left:11px;position:relative;line-height:1.45}
+.mod-hints ul li::before{content:'›';position:absolute;left:0;color:var(--gold);font-size:.95rem;line-height:1.3}
+.done-stamp{display:inline-flex;align-items:center;gap:4px;background:#e8f5e9;color:#2e7d32;border:1px solid #a5d6a7;border-radius:20px;padding:2px 10px;font-size:.7rem;font-weight:600;margin-top:8px}
+
+/* LEADERBOARD */
+.lb-header{margin-bottom:20px}
+.lb-title{font-family:'Cormorant Garamond',serif;font-size:1.9rem;font-weight:700;color:var(--maroon)}
+.lb-sub{font-size:.82rem;color:var(--text-mid);margin-top:4px}
+.lb-loading{text-align:center;padding:30px;color:var(--text-mid);font-size:.88rem}
+.lb-row{display:grid;grid-template-columns:44px 1fr 160px 90px;align-items:center;gap:12px;background:white;border:1.5px solid var(--cream-dark);border-radius:10px;padding:12px 16px;margin-bottom:8px;box-shadow:0 2px 8px var(--shadow);transition:box-shadow .2s}
+.lb-row:hover{box-shadow:0 4px 14px rgba(107,31,42,.14)}
+.lb-me{border-color:var(--gold);background:#fffdf4}
+.lb-rank{font-size:1.3rem;text-align:center}
+.lb-name{font-family:'Cormorant Garamond',serif;font-size:1.05rem;font-weight:600;color:var(--maroon);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lb-you{font-size:.7rem;font-weight:400;color:var(--gold)}
+.lb-bar-wrap{background:var(--cream-dark);border-radius:10px;height:8px;overflow:hidden}
+.lb-bar{height:100%;background:linear-gradient(90deg,var(--maroon),var(--gold));border-radius:10px;transition:width .5s ease}
+.lb-score{font-size:.88rem;font-weight:700;color:var(--maroon);text-align:right;white-space:nowrap}
+.lb-of{font-size:.73rem;font-weight:400;color:var(--text-mid)}
+.lb-streak{font-size:.7rem;color:var(--gold);font-weight:600;margin-left:6px}
+
+@media(max-width:600px){.header-inner{padding:12px 14px}.progress-bar-wrap{display:none}main{padding:16px 12px 50px}.lb-row{grid-template-columns:36px 1fr 70px}.lb-bar-wrap{display:none}.auth-box{padding:28px 18px}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+
+<!-- AUTH SCREEN -->
+<div id="authScreen">
+  <div class="auth-box">
+    <div class="auth-eagle">🦅</div>
+    <div class="auth-logo">Wish IELTS by Jarin</div>
+    <div class="auth-sub">Daily Practice Tracker</div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tabLogin" onclick="showAuthTab('login')">Log In</button>
+      <button class="auth-tab" id="tabRegister" onclick="showAuthTab('register')">Sign Up</button>
+    </div>
+    <div id="registerFields" style="display:none">
+      <input type="text" id="authDisplayName" placeholder="Your full name">
+    </div>
+    <input type="email" id="authEmail" placeholder="Email address" onkeydown="if(event.key==='Enter')submitAuth()">
+    <input type="password" id="authPassword" placeholder="Password" onkeydown="if(event.key==='Enter')submitAuth()">
+    <button class="btn-auth" onclick="submitAuth()" id="authSubmitBtn">Log In</button>
+    <div class="auth-error" id="authError"></div>
+  </div>
+</div>
+
+<!-- APP SCREEN -->
+<div id="appScreen">
+  <header>
+    <div class="header-inner">
+      <div class="brand">
+        <span class="eagle">🦅</span>
+        <div>
+          <span class="brand-main">Wish IELTS by Jarin</span>
+          <span class="brand-sub">Daily Practice Tracker</span>
+        </div>
+      </div>
+      <div class="header-user">Welcome, <strong id="headerUserName">—</strong></div>
+      <div class="header-stats">
+        <div class="stat-chip"><strong id="statDone">0</strong> / <strong id="statTotal">0</strong> tasks</div>
+        <div class="stat-chip"><strong id="statPct">0%</strong></div>
+        <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progressBar"></div></div>
+        <button class="btn-logout" onclick="doLogout()">✕ Log out</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="tabs-bar">
+    <div class="tabs-inner">
+      <button class="tab-btn active" data-tab="tracker" onclick="switchTab('tracker')">📋 My Tasks</button>
+      <button class="tab-btn" data-tab="leaderboard" onclick="switchTab('leaderboard')">🏆 Leaderboard</button>
+    </div>
+  </div>
+
+  <main>
+    <div class="tab-pane" id="pane-tracker">
+      <div class="controls-bar">
+        <input type="text" id="searchInput" placeholder="🔍 Search topic..." oninput="renderTracker()">
+        <select id="filterSelect" onchange="renderTracker()">
+          <option value="all">All Modules</option>
+          <option value="p1">Speaking Part 1</option>
+          <option value="cue">Speaking Part 2 — Cue Card</option>
+          <option value="wt">Writing Task 2</option>
+        </select>
+        <button class="btn-expand-all" onclick="toggleExpandAll()">Expand All</button>
+      </div>
+      <div id="trackerList"></div>
+    </div>
+    <div class="tab-pane" id="pane-leaderboard">
+      <div class="lb-header">
+        <div class="lb-title">🏆 Leaderboard</div>
+        <div class="lb-sub">Live rankings — updates in real-time as students complete tasks.</div>
+      </div>
+      <div id="leaderboardBody"><div class="lb-loading">Loading rankings…</div></div>
+    </div>
+  </main>
+</div>
+
+<!-- FIREBASE -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyASy5za25zwFskhGkAcpyGke14jxpKOUIg",
+  authDomain: "wish-ielts-homework.firebaseapp.com",
+  projectId: "wish-ielts-homework",
+  storageBucket: "wish-ielts-homework.firebasestorage.app",
+  messagingSenderId: "980307707713",
+  appId: "1:980307707713:web:fe4f09b4a729cad6d503c0"
+};
+
+const app  = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db   = getFirestore(app);
+
+// ── DATA ─────────────────────────────────────────────────────────────────────
+const SPEAKING_P1=[{topic:"Name",questions:["Who gave you your name?","Does your name have any special meaning?","Do you like your name?","Would you like to change your name?"]},{topic:"Study / Work",questions:["Do you work or are you a student?","Why did you choose your field?","What are your favourite subjects?","Is that a popular field in your country?"]},{topic:"Hometown",questions:["What is your hometown like?","Do you like your hometown?","What do you like most about it?","Do you plan to stay there long?"]},{topic:"Living Place & Accommodation",questions:["Do you live in a house or a flat?","Who do you live with?","Which room does your family use most?","Do you prefer a house or flat?"]},{topic:"Weather / Favourite Season",questions:["What's the weather like today?","What kind of weather do you like best?","Does the weather affect what you do?","Have there been changes in weather recently?"]},{topic:"Punctuality",questions:["Do you think it's important to be on time?","How do you feel when others are late?","Are you usually punctual?","What do you do to make sure you're on time?"]},{topic:"TV Programmes",questions:["How much TV do you watch?","What is your favourite programme?","Did you watch a lot of TV as a child?","How has TV changed your life?"]},{topic:"Museums & Galleries",questions:["Are there museums in your hometown?","Do you often visit museums?","Why are museums important?","When did you last visit one?"]},{topic:"Holidays & Public Holidays",questions:["What public holidays do you have?","Which holiday do you like most?","What do you usually do on holidays?","Should there be more public holidays?"]},{topic:"Film",questions:["Do you like watching films?","How often do you go to the cinema?","What kind of movies do you like best?","What was the first film you watched?"]},{topic:"Leisure Time",questions:["What do you do in your spare time?","How do you spend your evenings?","Do modern lifestyles give enough leisure time?","Is leisure time important?"]},{topic:"Sports",questions:["Do you like to watch sports on TV?","Do you play any sports?","Who is your favourite sports star?","Have you tried any dangerous sports?"]},{topic:"Fruits & Vegetables",questions:["What is your favourite fruit or vegetable?","How often do you eat fruits?","Are there special fruits in your hometown?","Should we eat vegetables every day?"]},{topic:"Maths",questions:["When did you start learning maths?","Do you like maths?","Is maths difficult for you?","Do you like to use a calculator?"]},{topic:"Sky & Stars",questions:["Do you like to watch the sky?","What is the night sky like in your hometown?","Have you taken a course about stars?","Is it important to study stars?"]},{topic:"Clothes",questions:["What clothes do you usually wear?","Did you wear a school uniform?","Do you change clothes when you get home?","Did you like your childhood clothes?"]},{topic:"Weekends",questions:["How do you usually spend weekends?","Do you prefer staying home or going out?","What did you do last weekend?","Should employees work on weekends?"]},{topic:"Reading",questions:["Do you like reading books?","What kinds of books do you like?","Did you read a lot as a child?","What are the benefits of reading for children?"]},{topic:"Sleep",questions:["How many hours do you sleep?","Is it necessary to take a nap?","How can you have a good sleep?","Can you sleep in noisy environments?"]},{topic:"Trees",questions:["Do you like trees?","Are there important trees in your country?","Did you climb trees as a child?","Should more people plant trees?"]},{topic:"Newspapers",questions:["Do you often read newspapers?","Magazines or newspapers — which do you prefer?","Is it important to read newspapers?","Is the Internet a good way to get news?"]},{topic:"Text Messages & Phone Calls",questions:["Do you text if someone doesn't answer?","When is texting better than calling?","How often do you send texts?","Have you had difficulty replying to a message?"]},{topic:"Memorising",questions:["What do you remember to do every day?","What helps people remember things?","Why do older people forget more easily?","Have you ever forgotten something important?"]},{topic:"Friends",questions:["How often do you hang out with friends?","Who do you usually hang out with?","Where do you like to go with friends?","Do you prefer big groups or a few friends?"]},{topic:"Travelling",questions:["Do you like travelling?","In which season do you prefer to travel?","How do you usually travel?","What are the advantages of train over plane?"]},{topic:"Public Transportation",questions:["Most popular transport in your hometown?","How often do you take buses?","Do you prefer public or private transport?","Will people drive more in future?"]},{topic:"Letters vs. Emails",questions:["Do you write many letters or emails?","Do you prefer writing by hand or computer?","What is the hardest kind of email to write?","Will people still write letters in future?"]},{topic:"Swimming",questions:["Can you swim?","Are there places to swim near you?","Do you think everyone should learn to swim?"]},{topic:"Snacks",questions:["Do you like snacks?","What kinds of snacks are popular in your country?","Is snacking good for your health?"]},{topic:"Photography",questions:["Do you like taking photographs?","How long have you liked photography?","What kind of photos do you take?","How do you keep your photos?"]},{topic:"Helping Others",questions:["Do you like to help others?","When did you last help someone?","Have you ever refused to help?","Did your parents teach you about helping others?"]},{topic:"History",questions:["Do you like learning about history?","What historical event interests you most?","Do you think history is important?","Name a historical figure you'd like to know more about."]},{topic:"Handwriting",questions:["Do you often write things by hand?","Do you prefer handwriting or typing?","How can children improve their handwriting?","Will computers replace handwriting?"]},{topic:"Music",questions:["Do you often listen to music?","What kinds of music do you like?","Have you ever learned an instrument?","What music is most popular in your country?"]},{topic:"Colours",questions:["What is your favourite colour?","Are colours important when buying things?","Do colours have special meaning in your country?","Do you usually wear your favourite colour?"]},{topic:"Teachers",questions:["Do you have a favourite teacher?","Why do you like that teacher?","Could you be a teacher?","Would you like to be a teacher?"]},{topic:"Being in a Hurry",questions:["When did you last do something in a hurry?","Do you like to finish things quickly?","Why do people make mistakes when rushed?","What do you never do in a hurry?"]},{topic:"Being Alone",questions:["Do you like to be alone?","What do you do when alone?","Do you prefer friends or alone time?","When were you last alone?"]},{topic:"Teamwork",questions:["When did you last work in a team?","Do you prefer working alone or in a group?","What is most important in teamwork?","Do you like to be a leader?"]},{topic:"Countryside",questions:["Would you like to live in the countryside?","What do countryside people like to do?","What are the benefits of rural life?","How does city life differ from countryside?"]},{topic:"Social Networks",questions:["What social networking sites do you use?","Are you a social person?","What kind of people do you make friends with online?","Can you find real friends on social media?"]},{topic:"Hanging Out with Friends",questions:["How often do you hang out with friends?","Who do you usually go out with?","Do you prefer big groups or a few friends?","Where do you like to go with friends?"]}];
+const CUE_CARDS=["Describe a place where you would like to go to relax.","Describe a place you have not been to yet.","Describe a uniform you wear or wore.","Describe your favourite picture or photo / a happy memory.","Describe a film you watched or a book that impressed you.","Describe a valuable item you'd like to give as a gift.","Describe a useful object in your home.","Describe a website that helped you / something that helps work or study faster.","Describe an unusual meal you had.","Describe something you want to try in the future.","Describe a special or favourite toy from childhood / a game you liked as a child.","Describe something you picked up that someone had thrown away.","Describe a gift you received recently.","Describe an invention useful in daily life / a piece of technology you find useful.","Describe a recently gifted item / a time you received money as a gift.","Describe a piece of good advice you received.","Describe an advertisement you liked.","Describe a historical period you'd like to know more about / a story that interests you.","Describe a song that has special meaning to you.","Describe your idea of a perfect home.","Describe good news you received / an achievement / something that changed your life.","Describe a period when you were busy.","Describe a situation where you helped someone.","Describe an age or stage of life that interests you.","Describe a long car journey.","Describe something you complained about.","Describe an interesting conversation with a stranger / something you taught a relative.","Describe something about your country you are proud of.","Describe a sport programme you like.","Describe an important decision you made.","Describe a traditional festival.","Describe an unusual holiday.","Describe a skill you learned in childhood.","Describe a difficult task you succeeded at.","Describe a water sport you'd like to try.","Describe a tradition you followed.","Describe something you would like to learn.","Describe a historical building you have visited.","Describe a friend you had a disagreement with.","Describe an indoor or outdoor place where it is easy to study.","Describe a time when you said 'Thank you' to someone.","Describe a person who encouraged you to achieve your goal.","Describe a time when you picked up an item someone had lost."];
+const WRITING_TASKS=["Technology is making people less social. To what extent do you agree or disagree?","AI is expected to replace many human jobs. What problems will this cause, and what solutions can be implemented?","People today have very little control over their personal information online. Why? What can be done?","Digital books vs. printed books. Discuss both views and give your opinion.","University education should be free for everyone regardless of income. To what extent do you agree?","Exams vs. continuous assessment — which is more effective? Discuss both views and give your opinion.","Studying online vs. in person. What are the advantages and disadvantages?","Schools should teach financial skills such as saving and budgeting. Do you agree or disagree?","Climate change is one of the biggest challenges facing the world today. To what extent do you agree?","Plastic pollution — what are the causes and how can this issue be solved?","Governments should invest more in renewable energy such as wind and solar power. Do you agree?","Individual vs. government responsibility for protecting the environment. Discuss both views.","Fast food should be heavily taxed to reduce consumption. To what extent do you agree?","Mental health problems are increasing among young people. Causes and measures?","Many people exercise less than in the past. Why? What can be done to encourage physical activity?","Governments should spend more on public health rather than treating illness. Do you agree?","Social media addiction — what problems does this create, and how can they be reduced?","Traditional values are becoming less important as society modernises. Discuss both views.","People are losing interest in local cultures. Why? What can be done to preserve cultural heritage?","Celebrities have a negative influence on society. To what extent do you agree?","Youth crime is increasing in many countries. What are the causes and solutions?","Minor crimes should not result in prison sentences. Do you agree or disagree?","Technology can prevent and reduce crime. Advantages and disadvantages?","Longer prison sentences vs. better alternative solutions for reducing crime. Discuss both views.","Public transport should be free for all citizens. What are the advantages and disadvantages?","Economic growth is the most important aim for governments. Discuss both views and give your opinion.","Governments should control rent prices to make housing affordable. To what extent do you agree?","Censorship of the media is necessary vs. harmful to society. Discuss both views.","Working from home is increasingly common. Do the advantages outweigh the disadvantages?","Job satisfaction vs. salary — which matters more? Discuss both views and give your opinion.","Automation and robotics are reducing the need for human workers. Advantages and disadvantages?","Companies should provide training and skill development for employees. Why? What are the benefits?","International tourism brings both benefits and problems. Do the advantages outweigh the disadvantages?","The gap between rich and poor is increasing. What problems does this create and what solutions exist?","Globalisation helps vs. destroys local cultures. Discuss both views and give your opinion.","Immigration has positive effects on a country. To what extent do you agree or disagree?","Many countries are moving toward a cashless society. What are the advantages and disadvantages?","Advertising encourages people to buy things they don't need. To what extent do you agree?","Rich countries should help poorer countries with financial and humanitarian aid. Discuss both views.","Rising living costs affect young people more than older generations. Problems and solutions?"];
+
+const TOTAL_DAYS=Math.max(SPEAKING_P1.length,CUE_CARDS.length+7,WRITING_TASKS.length+7);
+function buildDayList(){const days=[];for(let d=1;d<=TOTAL_DAYS;d++){const mods=[];if(d-1<SPEAKING_P1.length)mods.push({type:'p1',label:'Speaking Part 1',sub:'Familiar Topic',data:SPEAKING_P1[d-1]});if(d>=8&&d-8<CUE_CARDS.length)mods.push({type:'cue',label:'Speaking Part 2 — Cue Card',sub:'2 min talk',data:CUE_CARDS[d-8]});if(d>=8&&d-8<WRITING_TASKS.length)mods.push({type:'wt',label:'Writing Task 2',sub:'250+ words · 40 min',data:WRITING_TASKS[d-8]});if(mods.length)days.push({day:d,mods});}return days;}
+const ALL_DAYS=buildDayList();
+const TOTAL_TASKS=ALL_DAYS.reduce((s,d)=>s+d.mods.length,0);
+
+// ── STATE ────────────────────────────────────────────────────────────────────
+let currentUser=null, completed={}, expandedAll=false, authMode='login', lbUnsub=null;
+function taskKey(d,t){return d+'_'+t;}
+
+// ── AUTH UI ──────────────────────────────────────────────────────────────────
+window.showAuthTab=function(mode){
+  authMode=mode;
+  document.getElementById('tabLogin').classList.toggle('active',mode==='login');
+  document.getElementById('tabRegister').classList.toggle('active',mode==='register');
+  document.getElementById('registerFields').style.display=mode==='register'?'block':'none';
+  document.getElementById('authSubmitBtn').textContent=mode==='login'?'Log In':'Create Account';
+  document.getElementById('authError').textContent='';
+};
+
+window.submitAuth=async function(){
+  const email=document.getElementById('authEmail').value.trim();
+  const pass=document.getElementById('authPassword').value;
+  const err=document.getElementById('authError');
+  err.textContent='';
+  if(!email||!pass){err.textContent='Please fill in all fields.';return;}
+  try{
+    if(authMode==='register'){
+      const name=document.getElementById('authDisplayName').value.trim();
+      if(!name){err.textContent='Please enter your name.';return;}
+      const cred=await createUserWithEmailAndPassword(auth,email,pass);
+      await updateProfile(cred.user,{displayName:name});
+    } else {
+      await signInWithEmailAndPassword(auth,email,pass);
+    }
+  } catch(e){
+    const msgs={'auth/email-already-in-use':'This email is already registered.','auth/invalid-email':'Invalid email address.','auth/weak-password':'Password must be at least 6 characters.','auth/user-not-found':'No account found with this email.','auth/wrong-password':'Incorrect password.','auth/invalid-credential':'Incorrect email or password.'};
+    err.textContent=msgs[e.code]||e.message;
+  }
+};
+
+window.doLogout=async function(){
+  if(lbUnsub)lbUnsub();
+  await signOut(auth);
+};
+
+// ── AUTH STATE ────────────────────────────────────────────────────────────────
+onAuthStateChanged(auth,async user=>{
+  if(user){
+    currentUser=user;
+    document.getElementById('authScreen').style.display='none';
+    document.getElementById('appScreen').style.display='block';
+    document.getElementById('headerUserName').textContent=user.displayName||user.email.split('@')[0];
+    await loadProgress();
+    renderTracker();
+    updateStats();
+    subscribeLeaderboard();
+  } else {
+    currentUser=null;completed={};
+    document.getElementById('authScreen').style.display='flex';
+    document.getElementById('appScreen').style.display='none';
+    if(lbUnsub){lbUnsub();lbUnsub=null;}
+  }
+});
+
+// ── FIRESTORE ─────────────────────────────────────────────────────────────────
+async function loadProgress(){
+  try{
+    const snap=await getDoc(doc(db,'progress',currentUser.uid));
+    completed=snap.exists()?(snap.data().tasks||{}):{};
+  }catch{completed={};}
+}
+
+async function saveProgress(){
+  if(!currentUser)return;
+  const done=Object.values(completed).filter(Boolean).length;
+  try{
+    await setDoc(doc(db,'progress',currentUser.uid),{
+      tasks:completed,
+      completed:done,
+      total:TOTAL_TASKS,
+      name:currentUser.displayName||currentUser.email.split('@')[0],
+      email:currentUser.email,
+      updatedAt:serverTimestamp()
+    },{merge:true});
+  }catch(e){console.error('Save error:',e);}
+}
+
+function subscribeLeaderboard(){
+  lbUnsub=onSnapshot(collection(db,'progress'),snap=>{
+    const rows=[];
+    snap.forEach(d=>{
+      const data=d.data();
+      rows.push({uid:d.id,name:data.name||'Student',completed:data.completed||0,total:data.total||TOTAL_TASKS});
+    });
+    rows.sort((a,b)=>b.completed-a.completed);
+    renderLeaderboard(rows);
+  },err=>console.error('LB error:',err));
+}
+
+// ── STATS ────────────────────────────────────────────────────────────────────
+function updateStats(){
+  const done=Object.values(completed).filter(Boolean).length;
+  const pct=Math.round((done/TOTAL_TASKS)*100);
+  document.getElementById('statDone').textContent=done;
+  document.getElementById('statTotal').textContent=TOTAL_TASKS;
+  document.getElementById('statPct').textContent=pct+'%';
+  document.getElementById('progressBar').style.width=pct+'%';
+}
+
+// ── TRACKER ──────────────────────────────────────────────────────────────────
+window.renderTracker=function(){
+  const container=document.getElementById('trackerList');
+  const filter=document.getElementById('filterSelect').value;
+  const search=document.getElementById('searchInput').value.toLowerCase();
+  container.innerHTML='';
+  ALL_DAYS.forEach((dayObj,idx)=>{
+    const{day,mods}=dayObj;
+    const filteredMods=mods.filter(m=>{
+      const typeOk=filter==='all'||m.type===filter;
+      const topic=typeof m.data==='string'?m.data:m.data.topic;
+      return typeOk&&(!search||topic.toLowerCase().includes(search));
+    });
+    if(!filteredMods.length)return;
+    const doneMods=mods.filter(m=>completed[taskKey(day,m.type)]).length;
+    const allDone=doneMods===mods.length, anyDone=doneMods>0;
+    const row=document.createElement('div');
+    row.className='day-row'+(allDone?' day-all-done':'');
+    row.style.animationDelay=(idx*0.012)+'s';
+    row.innerHTML=`
+      <div class="day-label" onclick="toggleDay(${day})">
+        <div class="day-label-left">
+          <span class="day-badge ${allDone?'badge-done':anyDone?'badge-partial':''}">Day ${day}</span>
+          <div class="day-mod-pills">
+            ${mods.map(m=>`<span class="mod-pill mod-${m.type}">${m.type==='p1'?'Speaking P1':m.type==='cue'?'Cue Card':'Writing T2'}</span>`).join('')}
+          </div>
+        </div>
+        <div class="day-right">
+          <span class="day-progress-text">${doneMods}/${mods.length}</span>
+          <span class="day-chevron" id="chev-${day}">▾</span>
+        </div>
+      </div>
+      <div class="day-modules" id="mods-${day}" style="display:none">
+        ${filteredMods.map(m=>buildModCard(day,m)).join('')}
+      </div>`;
+    container.appendChild(row);
+  });
+};
+
+function buildModCard(day,m){
+  const key=taskKey(day,m.type);
+  const done=!!completed[key];
+  const topic=typeof m.data==='string'?m.data:m.data.topic;
+  const qs=typeof m.data==='object'&&m.data.questions?m.data.questions:null;
+  const icons={p1:'🎙️',cue:'🃏',wt:'✍️'};
+  const hintLabel={p1:'Practice Questions',cue:'Remember to Cover',wt:'Essay Checklist'};
+  const hints={
+    p1:qs?qs.map(q=>`<li>${q}</li>`).join(''):'',
+    cue:'<li>Speak for 1 min 30 sec – 2 min</li><li>Cover: What / Who / Where / When / Why it matters</li><li>Use a range of tenses and vocabulary</li>',
+    wt:'<li>Clear position in the introduction</li><li>2 fully developed body paragraphs</li><li>Conclusion with no new ideas</li><li>Target Band 7+ vocabulary & cohesion</li>'
+  };
+  return `<div class="module-card ${done?'mod-done':''}" id="card-${day}-${m.type}">
+    <div class="mod-header mod-${m.type}">
+      <div class="mod-header-left">
+        <span class="mod-icon">${icons[m.type]}</span>
+        <div><span class="mod-type-label">${m.label}</span><span class="mod-type-sub">${m.sub}</span></div>
+      </div>
+      <button class="check-btn ${done?'checked':''}" onclick="toggleTask(event,${day},'${m.type}')">${done?'✓':''}</button>
+    </div>
+    <div class="mod-body">
+      <div class="mod-topic ${done?'topic-done':''}">${topic}</div>
+      <div class="mod-hints"><div class="hints-label">${hintLabel[m.type]}</div><ul>${hints[m.type]}</ul></div>
+      ${done?'<div class="done-stamp">✓ Completed</div>':''}
+    </div>
+  </div>`;
+}
+
+window.toggleDay=function(day){
+  const mods=document.getElementById('mods-'+day);
+  const chev=document.getElementById('chev-'+day);
+  if(!mods)return;
+  const open=mods.style.display!=='none';
+  mods.style.display=open?'none':'flex';
+  if(chev)chev.textContent=open?'▾':'▴';
+};
+
+window.toggleExpandAll=function(){
+  expandedAll=!expandedAll;
+  document.querySelectorAll('.day-modules').forEach(el=>el.style.display=expandedAll?'flex':'none');
+  document.querySelectorAll('.day-chevron').forEach(el=>el.textContent=expandedAll?'▴':'▾');
+  document.querySelector('.btn-expand-all').textContent=expandedAll?'Collapse All':'Expand All';
+};
+
+window.toggleTask=async function(e,day,type){
+  e.stopPropagation();
+  const key=taskKey(day,type);
+  completed[key]=!completed[key];
+  await saveProgress();
+  renderTracker();
+  updateStats();
+};
+
+// ── LEADERBOARD ───────────────────────────────────────────────────────────────
+function renderLeaderboard(rows){
+  const lb=document.getElementById('leaderboardBody');
+  if(!lb)return;
+  if(!rows||!rows.length){lb.innerHTML='<div class="lb-loading">No data yet.</div>';return;}
+  const medals=['🥇','🥈','🥉'];
+  lb.innerHTML=rows.map((s,i)=>{
+    const pct=Math.round((s.completed/(s.total||TOTAL_TASKS))*100);
+    const isMe=currentUser&&s.uid===currentUser.uid;
+    return `<div class="lb-row${isMe?' lb-me':''}">
+      <div class="lb-rank">${i<3?medals[i]:'#'+(i+1)}</div>
+      <div class="lb-name">${s.name}${isMe?' <span class="lb-you">(You)</span>':''}</div>
+      <div class="lb-bar-wrap"><div class="lb-bar" style="width:${pct}%"></div></div>
+      <div class="lb-score">${s.completed} <span class="lb-of">/ ${s.total||TOTAL_TASKS}</span></div>
+    </div>`;
+  }).join('');
+}
+
+// ── TABS ──────────────────────────────────────────────────────────────────────
+window.switchTab=function(tab){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));
+  document.querySelectorAll('.tab-pane').forEach(p=>p.style.display=p.id==='pane-'+tab?'block':'none');
+};
+</script>
+</body>
+</html>
