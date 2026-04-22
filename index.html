@@ -131,6 +131,23 @@ main{max-width:1100px;margin:0 auto;padding:28px 24px 60px}
 
 @media(max-width:600px){.header-inner{padding:12px 14px}.progress-bar-wrap{display:none}main{padding:16px 12px 50px}.lb-row{grid-template-columns:36px 1fr 70px}.lb-bar-wrap{display:none}.auth-box{padding:28px 18px}}
 @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ADMIN */
+.admin-card{background:white;border-radius:12px;border:1.5px solid var(--cream-dark);margin-bottom:14px;overflow:hidden;box-shadow:0 2px 10px var(--shadow)}
+.admin-card-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;cursor:pointer;background:var(--maroon-deep);gap:10px}
+.admin-student-name{font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:700;color:var(--gold-light)}
+.admin-student-email{font-size:.72rem;color:rgba(245,239,224,.55);margin-top:2px}
+.admin-progress-chip{background:rgba(201,168,76,.15);border:1px solid rgba(201,168,76,.35);border-radius:20px;padding:4px 12px;font-size:.8rem;color:var(--gold);font-weight:600;white-space:nowrap;flex-shrink:0}
+.admin-card-body{padding:14px 18px}
+.admin-day-table{width:100%;border-collapse:collapse;font-size:.8rem}
+.admin-day-table th{text-align:left;padding:6px 10px;background:var(--cream-dark);color:var(--maroon);font-weight:600;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase}
+.admin-day-table td{padding:6px 10px;border-bottom:1px solid var(--cream-dark);vertical-align:middle}
+.admin-day-table tr:last-child td{border-bottom:none}
+.admin-day-table tr:hover td{background:var(--cream-mid)}
+.task-tick{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;font-size:.7rem}
+.task-tick.done{background:#c8e6c9;color:#2e7d32}
+.task-tick.todo{background:var(--cream-dark);color:var(--text-mid)}
+.admin-chevron{color:var(--gold);font-size:.9rem}
 </style>
 </head>
 <body>
@@ -180,6 +197,7 @@ main{max-width:1100px;margin:0 auto;padding:28px 24px 60px}
     <div class="tabs-inner">
       <button class="tab-btn active" data-tab="tracker" onclick="switchTab('tracker')">📋 My Tasks</button>
       <button class="tab-btn" data-tab="leaderboard" onclick="switchTab('leaderboard')">🏆 Leaderboard</button>
+      <button class="tab-btn" data-tab="admin" id="adminTabBtn" onclick="switchTab('admin')" style="display:none">🔐 Admin</button>
     </div>
   </div>
 
@@ -203,6 +221,17 @@ main{max-width:1100px;margin:0 auto;padding:28px 24px 60px}
         <div class="lb-sub">Live rankings — updates in real-time as students complete tasks.</div>
       </div>
       <div id="leaderboardBody"><div class="lb-loading">Loading rankings…</div></div>
+    </div>
+
+    <div class="tab-pane" id="pane-admin">
+      <div class="lb-header">
+        <div class="lb-title">🔐 Admin Panel</div>
+        <div class="lb-sub">Individual student progress — visible only to you.</div>
+      </div>
+      <div id="adminSearch" style="margin-bottom:16px">
+        <input type="text" id="adminSearchInput" placeholder="🔍 Search student name..." oninput="filterAdminTable()" style="padding:9px 14px;border:1.5px solid var(--cream-dark);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.88rem;width:100%;max-width:360px;outline:none;background:white">
+      </div>
+      <div id="adminBody"><div class="lb-loading">Loading student data…</div></div>
     </div>
   </main>
 </div>
@@ -237,7 +266,8 @@ const ALL_DAYS=buildDayList();
 const TOTAL_TASKS=ALL_DAYS.reduce((s,d)=>s+d.mods.length,0);
 
 // ── STATE ────────────────────────────────────────────────────────────────────
-let currentUser=null, completed={}, expandedAll=false, authMode='login', lbUnsub=null;
+const ADMIN_EMAIL = 'jarintasnum@gmail.com';
+let currentUser=null, completed={}, expandedAll=false, authMode='login', lbUnsub=null, adminUnsub=null, adminData=[];
 function taskKey(d,t){return d+'_'+t;}
 
 // ── AUTH UI ──────────────────────────────────────────────────────────────────
@@ -283,6 +313,11 @@ onAuthStateChanged(auth,async user=>{
     document.getElementById('authScreen').style.display='none';
     document.getElementById('appScreen').style.display='block';
     document.getElementById('headerUserName').textContent=user.displayName||user.email.split('@')[0];
+    // Show admin tab if admin
+    if(user.email===ADMIN_EMAIL){
+      document.getElementById('adminTabBtn').style.display='block';
+      subscribeAdmin();
+    }
     await loadProgress();
     renderTracker();
     updateStats();
@@ -292,6 +327,8 @@ onAuthStateChanged(auth,async user=>{
     document.getElementById('authScreen').style.display='flex';
     document.getElementById('appScreen').style.display='none';
     if(lbUnsub){lbUnsub();lbUnsub=null;}
+    if(adminUnsub){adminUnsub();adminUnsub=null;}
+    document.getElementById('adminTabBtn').style.display='none';
   }
 });
 
@@ -449,6 +486,82 @@ function renderLeaderboard(rows){
     </div>`;
   }).join('');
 }
+
+// ── ADMIN ─────────────────────────────────────────────────────────────────────
+function subscribeAdmin(){
+  adminUnsub=onSnapshot(collection(db,'progress'),snap=>{
+    adminData=[];
+    snap.forEach(d=>{
+      const data=d.data();
+      adminData.push({uid:d.id,name:data.name||'Student',email:data.email||'',completed:data.completed||0,total:data.total||TOTAL_TASKS,tasks:data.tasks||{}});
+    });
+    adminData.sort((a,b)=>b.completed-a.completed);
+    renderAdminPanel(adminData);
+  });
+}
+
+function renderAdminPanel(data){
+  const body=document.getElementById('adminBody');
+  if(!body)return;
+  if(!data.length){body.innerHTML='<div class="lb-loading">No students yet.</div>';return;}
+  body.innerHTML=data.map((s,i)=>{
+    const pct=Math.round((s.completed/(s.total||TOTAL_TASKS))*100);
+    const rows=ALL_DAYS.map(dayObj=>{
+      const{day,mods}=dayObj;
+      const cells=mods.map(m=>{
+        const done=!!(s.tasks[day+'_'+m.type]);
+        const label=m.type==='p1'?'P1':m.type==='cue'?'CC':'WT';
+        return `<span class="task-tick ${done?'done':'todo'}" title="${m.type==='p1'?'Speaking P1':m.type==='cue'?'Cue Card':'Writing'}">${done?'✓':'—'}</span>`;
+      }).join(' ');
+      const dayDone=mods.every(m=>s.tasks[day+'_'+m.type]);
+      return `<tr>
+        <td><strong style="color:var(--maroon);font-family:'Cormorant Garamond',serif">Day ${day}</strong></td>
+        <td>${cells}</td>
+        <td style="font-size:.75rem;color:var(--text-mid)">${mods.filter(m=>s.tasks[day+'_'+m.type]).length}/${mods.length} done</td>
+      </tr>`;
+    }).join('');
+    return `<div class="admin-card" id="acard-${i}">
+      <div class="admin-card-header" onclick="toggleAdminCard(${i})">
+        <div>
+          <div class="admin-student-name">${s.name}</div>
+          <div class="admin-student-email">${s.email}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="admin-progress-chip">${s.completed}/${s.total||TOTAL_TASKS} · ${pct}%</div>
+          <span class="admin-chevron" id="achev-${i}">▾</span>
+        </div>
+      </div>
+      <div id="abody-${i}" style="display:none">
+        <div class="admin-card-body">
+          <div style="margin-bottom:10px">
+            <div style="background:var(--cream-dark);border-radius:10px;height:8px;overflow:hidden">
+              <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,var(--maroon),var(--gold));border-radius:10px;transition:width .5s ease"></div>
+            </div>
+          </div>
+          <table class="admin-day-table">
+            <thead><tr><th>Day</th><th>Tasks</th><th>Progress</th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+window.toggleAdminCard=function(i){
+  const body=document.getElementById('abody-'+i);
+  const chev=document.getElementById('achev-'+i);
+  if(!body)return;
+  const open=body.style.display!=='none';
+  body.style.display=open?'none':'block';
+  if(chev)chev.textContent=open?'▾':'▴';
+};
+
+window.filterAdminTable=function(){
+  const q=document.getElementById('adminSearchInput').value.toLowerCase();
+  const filtered=adminData.filter(s=>s.name.toLowerCase().includes(q)||s.email.toLowerCase().includes(q));
+  renderAdminPanel(filtered);
+};
 
 // ── TABS ──────────────────────────────────────────────────────────────────────
 window.switchTab=function(tab){
