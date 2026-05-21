@@ -164,6 +164,7 @@ main{max-width:1100px;margin:0 auto;padding:28px 24px 60px}
     </div>
     <div id="registerFields" style="display:none">
       <input type="text" id="authDisplayName" placeholder="Your full name">
+      <input type="text" id="authBatchCode" placeholder="Batch code (get from your teacher)">
     </div>
     <input type="email" id="authEmail" placeholder="Email address" onkeydown="if(event.key==='Enter')submitAuth()">
     <input type="password" id="authPassword" placeholder="Password" onkeydown="if(event.key==='Enter')submitAuth()">
@@ -228,20 +229,22 @@ main{max-width:1100px;margin:0 auto;padding:28px 24px 60px}
         <div class="lb-title">🔐 Admin Panel</div>
         <div class="lb-sub">Individual student progress — visible only to you.</div>
       </div>
-      <div id="adminSearch" style="margin-bottom:16px">
-        <input type="text" id="adminSearchInput" placeholder="🔍 Search student name..." oninput="filterAdminTable()" style="padding:9px 14px;border:1.5px solid var(--cream-dark);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.88rem;width:100%;max-width:360px;outline:none;background:white">
+      <div id="adminSearch" style="margin-bottom:16px;display:flex;gap:10px;flex-wrap:wrap">
+        <input type="text" id="adminSearchInput" placeholder="🔍 Search student name..." oninput="filterAdminTable()" style="padding:9px 14px;border:1.5px solid var(--cream-dark);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.88rem;flex:1;min-width:160px;outline:none;background:white">
+        <select id="adminBatchFilter" onchange="filterAdminTable()" style="padding:9px 14px;border:1.5px solid var(--cream-dark);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.88rem;color:var(--text-dark);background:white;outline:none;cursor:pointer">
+          <option value="all">All Batches</option>
+        </select>
       </div>
       <div id="adminBody"><div class="lb-loading">Loading student data…</div></div>
     </div>
   </main>
 </div>
 
-<!-- FIREBASE -->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
+<!-- FIREBASE COMPAT (non-module, works with onclick) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script>
 const firebaseConfig = {
   apiKey: "AIzaSyASy5za25zwFskhGkAcpyGke14jxpKOUIg",
   authDomain: "wish-ielts-homework.firebaseapp.com",
@@ -250,10 +253,9 @@ const firebaseConfig = {
   messagingSenderId: "980307707713",
   appId: "1:980307707713:web:fe4f09b4a729cad6d503c0"
 };
-
-const app  = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db   = getFirestore(app);
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db   = firebase.firestore();
 
 // ── DATA ─────────────────────────────────────────────────────────────────────
 const SPEAKING_P1=[{topic:"Name",questions:["Who gave you your name?","Does your name have any special meaning?","Do you like your name?","Would you like to change your name?"]},{topic:"Study / Work",questions:["Do you work or are you a student?","Why did you choose your field?","What are your favourite subjects?","Is that a popular field in your country?"]},{topic:"Hometown",questions:["What is your hometown like?","Do you like your hometown?","What do you like most about it?","Do you plan to stay there long?"]},{topic:"Living Place & Accommodation",questions:["Do you live in a house or a flat?","Who do you live with?","Which room does your family use most?","Do you prefer a house or flat?"]},{topic:"Weather / Favourite Season",questions:["What's the weather like today?","What kind of weather do you like best?","Does the weather affect what you do?","Have there been changes in weather recently?"]},{topic:"Punctuality",questions:["Do you think it's important to be on time?","How do you feel when others are late?","Are you usually punctual?","What do you do to make sure you're on time?"]},{topic:"TV Programmes",questions:["How much TV do you watch?","What is your favourite programme?","Did you watch a lot of TV as a child?","How has TV changed your life?"]},{topic:"Museums & Galleries",questions:["Are there museums in your hometown?","Do you often visit museums?","Why are museums important?","When did you last visit one?"]},{topic:"Holidays & Public Holidays",questions:["What public holidays do you have?","Which holiday do you like most?","What do you usually do on holidays?","Should there be more public holidays?"]},{topic:"Film",questions:["Do you like watching films?","How often do you go to the cinema?","What kind of movies do you like best?","What was the first film you watched?"]},{topic:"Leisure Time",questions:["What do you do in your spare time?","How do you spend your evenings?","Do modern lifestyles give enough leisure time?","Is leisure time important?"]},{topic:"Sports",questions:["Do you like to watch sports on TV?","Do you play any sports?","Who is your favourite sports star?","Have you tried any dangerous sports?"]},{topic:"Fruits & Vegetables",questions:["What is your favourite fruit or vegetable?","How often do you eat fruits?","Are there special fruits in your hometown?","Should we eat vegetables every day?"]},{topic:"Maths",questions:["When did you start learning maths?","Do you like maths?","Is maths difficult for you?","Do you like to use a calculator?"]},{topic:"Sky & Stars",questions:["Do you like to watch the sky?","What is the night sky like in your hometown?","Have you taken a course about stars?","Is it important to study stars?"]},{topic:"Clothes",questions:["What clothes do you usually wear?","Did you wear a school uniform?","Do you change clothes when you get home?","Did you like your childhood clothes?"]},{topic:"Weekends",questions:["How do you usually spend weekends?","Do you prefer staying home or going out?","What did you do last weekend?","Should employees work on weekends?"]},{topic:"Reading",questions:["Do you like reading books?","What kinds of books do you like?","Did you read a lot as a child?","What are the benefits of reading for children?"]},{topic:"Sleep",questions:["How many hours do you sleep?","Is it necessary to take a nap?","How can you have a good sleep?","Can you sleep in noisy environments?"]},{topic:"Trees",questions:["Do you like trees?","Are there important trees in your country?","Did you climb trees as a child?","Should more people plant trees?"]},{topic:"Newspapers",questions:["Do you often read newspapers?","Magazines or newspapers — which do you prefer?","Is it important to read newspapers?","Is the Internet a good way to get news?"]},{topic:"Text Messages & Phone Calls",questions:["Do you text if someone doesn't answer?","When is texting better than calling?","How often do you send texts?","Have you had difficulty replying to a message?"]},{topic:"Memorising",questions:["What do you remember to do every day?","What helps people remember things?","Why do older people forget more easily?","Have you ever forgotten something important?"]},{topic:"Friends",questions:["How often do you hang out with friends?","Who do you usually hang out with?","Where do you like to go with friends?","Do you prefer big groups or a few friends?"]},{topic:"Travelling",questions:["Do you like travelling?","In which season do you prefer to travel?","How do you usually travel?","What are the advantages of train over plane?"]},{topic:"Public Transportation",questions:["Most popular transport in your hometown?","How often do you take buses?","Do you prefer public or private transport?","Will people drive more in future?"]},{topic:"Letters vs. Emails",questions:["Do you write many letters or emails?","Do you prefer writing by hand or computer?","What is the hardest kind of email to write?","Will people still write letters in future?"]},{topic:"Swimming",questions:["Can you swim?","Are there places to swim near you?","Do you think everyone should learn to swim?"]},{topic:"Snacks",questions:["Do you like snacks?","What kinds of snacks are popular in your country?","Is snacking good for your health?"]},{topic:"Photography",questions:["Do you like taking photographs?","How long have you liked photography?","What kind of photos do you take?","How do you keep your photos?"]},{topic:"Helping Others",questions:["Do you like to help others?","When did you last help someone?","Have you ever refused to help?","Did your parents teach you about helping others?"]},{topic:"History",questions:["Do you like learning about history?","What historical event interests you most?","Do you think history is important?","Name a historical figure you'd like to know more about."]},{topic:"Handwriting",questions:["Do you often write things by hand?","Do you prefer handwriting or typing?","How can children improve their handwriting?","Will computers replace handwriting?"]},{topic:"Music",questions:["Do you often listen to music?","What kinds of music do you like?","Have you ever learned an instrument?","What music is most popular in your country?"]},{topic:"Colours",questions:["What is your favourite colour?","Are colours important when buying things?","Do colours have special meaning in your country?","Do you usually wear your favourite colour?"]},{topic:"Teachers",questions:["Do you have a favourite teacher?","Why do you like that teacher?","Could you be a teacher?","Would you like to be a teacher?"]},{topic:"Being in a Hurry",questions:["When did you last do something in a hurry?","Do you like to finish things quickly?","Why do people make mistakes when rushed?","What do you never do in a hurry?"]},{topic:"Being Alone",questions:["Do you like to be alone?","What do you do when alone?","Do you prefer friends or alone time?","When were you last alone?"]},{topic:"Teamwork",questions:["When did you last work in a team?","Do you prefer working alone or in a group?","What is most important in teamwork?","Do you like to be a leader?"]},{topic:"Countryside",questions:["Would you like to live in the countryside?","What do countryside people like to do?","What are the benefits of rural life?","How does city life differ from countryside?"]},{topic:"Social Networks",questions:["What social networking sites do you use?","Are you a social person?","What kind of people do you make friends with online?","Can you find real friends on social media?"]},{topic:"Hanging Out with Friends",questions:["How often do you hang out with friends?","Who do you usually go out with?","Do you prefer big groups or a few friends?","Where do you like to go with friends?"]}];
@@ -289,11 +291,19 @@ window.submitAuth=async function(){
   try{
     if(authMode==='register'){
       const name=document.getElementById('authDisplayName').value.trim();
+      const batch=document.getElementById('authBatchCode').value.trim();
       if(!name){err.textContent='Please enter your name.';return;}
-      const cred=await createUserWithEmailAndPassword(auth,email,pass);
-      await updateProfile(cred.user,{displayName:name});
+      if(!batch){err.textContent='Please enter your batch code.';return;}
+      const cred=await auth.createUserWithEmailAndPassword(email,pass);
+      await cred.user.updateProfile({displayName:name});
+      // Save batch to Firestore immediately
+      await db.collection('progress').doc(cred.user.uid).set({
+        name:name, email:email, batch:batch,
+        tasks:{}, completed:0, total:TOTAL_TASKS,
+        updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+      });
     } else {
-      await signInWithEmailAndPassword(auth,email,pass);
+      await auth.signInWithEmailAndPassword(email,pass);
     }
   } catch(e){
     const msgs={'auth/email-already-in-use':'This email is already registered.','auth/invalid-email':'Invalid email address.','auth/weak-password':'Password must be at least 6 characters.','auth/user-not-found':'No account found with this email.','auth/wrong-password':'Incorrect password.','auth/invalid-credential':'Incorrect email or password.'};
@@ -303,11 +313,11 @@ window.submitAuth=async function(){
 
 window.doLogout=async function(){
   if(lbUnsub)lbUnsub();
-  await signOut(auth);
+  await auth.signOut();
 };
 
 // ── AUTH STATE ────────────────────────────────────────────────────────────────
-onAuthStateChanged(auth,async user=>{
+auth.onAuthStateChanged(async user=>{
   if(user){
     currentUser=user;
     document.getElementById('authScreen').style.display='none';
@@ -335,8 +345,8 @@ onAuthStateChanged(auth,async user=>{
 // ── FIRESTORE ─────────────────────────────────────────────────────────────────
 async function loadProgress(){
   try{
-    const snap=await getDoc(doc(db,'progress',currentUser.uid));
-    completed=snap.exists()?(snap.data().tasks||{}):{};
+    const snap=await db.collection('progress').doc(currentUser.uid).get();
+    completed=snap.exists?(snap.data().tasks||{}):{};
   }catch{completed={};}
 }
 
@@ -344,23 +354,23 @@ async function saveProgress(){
   if(!currentUser)return;
   const done=Object.values(completed).filter(Boolean).length;
   try{
-    await setDoc(doc(db,'progress',currentUser.uid),{
+    await db.collection('progress').doc(currentUser.uid).set({
       tasks:completed,
       completed:done,
       total:TOTAL_TASKS,
       name:currentUser.displayName||currentUser.email.split('@')[0],
       email:currentUser.email,
-      updatedAt:serverTimestamp()
-    },{merge:true});
+      updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+    });
   }catch(e){console.error('Save error:',e);}
 }
 
 function subscribeLeaderboard(){
-  lbUnsub=onSnapshot(collection(db,'progress'),snap=>{
+  lbUnsub=db.collection('progress').onSnapshot(snap=>{
     const rows=[];
     snap.forEach(d=>{
       const data=d.data();
-      rows.push({uid:d.id,name:data.name||'Student',completed:data.completed||0,total:data.total||TOTAL_TASKS});
+      rows.push({uid:d.id,name:data.name||'Student',completed:data.completed||0,total:data.total||TOTAL_TASKS,batch:data.batch||''});
     });
     rows.sort((a,b)=>b.completed-a.completed);
     renderLeaderboard(rows);
@@ -480,7 +490,7 @@ function renderLeaderboard(rows){
     const isMe=currentUser&&s.uid===currentUser.uid;
     return `<div class="lb-row${isMe?' lb-me':''}">
       <div class="lb-rank">${i<3?medals[i]:'#'+(i+1)}</div>
-      <div class="lb-name">${s.name}${isMe?' <span class="lb-you">(You)</span>':''}</div>
+      <div class="lb-name">${s.name}${isMe?' <span class="lb-you">(You)</span>':''}${s.batch?` <span style="font-size:.68rem;background:var(--cream-dark);color:var(--maroon);padding:1px 7px;border-radius:10px;font-family:'DM Sans',sans-serif;font-weight:600">${s.batch}</span>`:''}</div>
       <div class="lb-bar-wrap"><div class="lb-bar" style="width:${pct}%"></div></div>
       <div class="lb-score">${s.completed} <span class="lb-of">/ ${s.total||TOTAL_TASKS}</span></div>
     </div>`;
@@ -489,13 +499,14 @@ function renderLeaderboard(rows){
 
 // ── ADMIN ─────────────────────────────────────────────────────────────────────
 function subscribeAdmin(){
-  adminUnsub=onSnapshot(collection(db,'progress'),snap=>{
+  adminUnsub=db.collection('progress').onSnapshot(snap=>{
     adminData=[];
     snap.forEach(d=>{
       const data=d.data();
-      adminData.push({uid:d.id,name:data.name||'Student',email:data.email||'',completed:data.completed||0,total:data.total||TOTAL_TASKS,tasks:data.tasks||{}});
+      adminData.push({uid:d.id,name:data.name||'Student',email:data.email||'',batch:data.batch||'—',completed:data.completed||0,total:data.total||TOTAL_TASKS,tasks:data.tasks||{}});
     });
     adminData.sort((a,b)=>b.completed-a.completed);
+    populateBatchFilter();
     renderAdminPanel(adminData);
   });
 }
@@ -524,7 +535,7 @@ function renderAdminPanel(data){
       <div class="admin-card-header" onclick="toggleAdminCard(${i})">
         <div>
           <div class="admin-student-name">${s.name}</div>
-          <div class="admin-student-email">${s.email}</div>
+          <div class="admin-student-email">${s.email} · <span style="color:var(--gold-light);font-weight:600">${s.batch}</span></div>
         </div>
         <div style="display:flex;align-items:center;gap:10px">
           <div class="admin-progress-chip">${s.completed}/${s.total||TOTAL_TASKS} · ${pct}%</div>
@@ -559,8 +570,26 @@ window.toggleAdminCard=function(i){
 
 window.filterAdminTable=function(){
   const q=document.getElementById('adminSearchInput').value.toLowerCase();
-  const filtered=adminData.filter(s=>s.name.toLowerCase().includes(q)||s.email.toLowerCase().includes(q));
+  const batch=document.getElementById('adminBatchFilter').value;
+  const filtered=adminData.filter(s=>{
+    const nameOk=s.name.toLowerCase().includes(q)||s.email.toLowerCase().includes(q);
+    const batchOk=batch==='all'||s.batch===batch;
+    return nameOk&&batchOk;
+  });
   renderAdminPanel(filtered);
+};
+
+function populateBatchFilter(){
+  const sel=document.getElementById('adminBatchFilter');
+  if(!sel)return;
+  const batches=[...new Set(adminData.map(s=>s.batch).filter(b=>b&&b!=='—'))].sort();
+  // Keep "All Batches" option, rebuild rest
+  sel.innerHTML='<option value="all">All Batches</option>';
+  batches.forEach(b=>{
+    const opt=document.createElement('option');
+    opt.value=b;opt.textContent=b;
+    sel.appendChild(opt);
+  });
 };
 
 // ── TABS ──────────────────────────────────────────────────────────────────────
